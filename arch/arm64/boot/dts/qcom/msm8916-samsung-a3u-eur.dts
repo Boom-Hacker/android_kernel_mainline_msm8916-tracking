@@ -73,12 +73,16 @@
 		touchscreen-size-x = <540>;
 		touchscreen-size-y = <960>;
 
-		vdd-supply = <&reg_vdd_tsp>;
-		vddo-supply = <&pm8916_l6>;
+		vcca-supply = <&reg_vdd_tsp_a>;
+		vdd-supply = <&pm8916_l6>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&ts_int_default>;
 	};
+};
+
+&clk_pwm {
+	status = "okay";
 };
 
 &dsi0 {
@@ -102,6 +106,10 @@
 &dsi0_out {
 	data-lanes = <0 1>;
 	remote-endpoint = <&panel_in>;
+};
+
+&vibrator {
+	status = "okay";
 };
 
 &msmgpio {

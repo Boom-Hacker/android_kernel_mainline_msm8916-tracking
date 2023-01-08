@@ -323,8 +323,7 @@ static int qcom_scm_set_boot_addr_mc(void *entry, unsigned int flags)
 		},
 	};
 
-	/* Need a device for DMA of the additional arguments */
-	if (!__scm || __get_convention() == SMC_CONVENTION_LEGACY)
+    if (__get_convention() == SMC_CONVENTION_LEGACY)
 		return -EOPNOTSUPP;
 
 	return qcom_scm_call(__scm->dev, &desc, NULL);
@@ -830,7 +829,7 @@ int qcom_scm_iommu_set_cp_pool_size(u32 spare, u32 size)
 		.owner = ARM_SMCCC_OWNER_SIP,
 	};
 
-	return qcom_scm_call(__scm->dev, &desc, NULL);
+	return qcom_scm_call(__scm ? __scm->dev : NULL, &desc, NULL);
 }
 EXPORT_SYMBOL(qcom_scm_iommu_set_cp_pool_size);
 

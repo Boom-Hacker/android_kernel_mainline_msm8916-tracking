@@ -16,6 +16,7 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+#include <linux/random.h>
 #include "txrx.h"
 
 static inline int get_rssi0(struct wcn36xx_rx_bd *bd)
@@ -278,6 +279,7 @@ static void wcn36xx_update_survey(struct wcn36xx *wcn, int rssi, int snr,
 	struct ieee80211_supported_band *sband;
 	int idx;
 	int i;
+	u8 snr_sample = snr & 0xff;
 
 	idx = 0;
 	if (band == NL80211_BAND_5GHZ)
@@ -297,6 +299,8 @@ static void wcn36xx_update_survey(struct wcn36xx *wcn, int rssi, int snr,
 	wcn->chan_survey[idx].rssi = rssi;
 	wcn->chan_survey[idx].snr = snr;
 	spin_unlock(&wcn->survey_lock);
+
+	add_device_randomness(&snr_sample, sizeof(snr_sample));
 }
 
 int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
@@ -363,7 +367,13 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 		 */
 		u8 hwch = (bd->reserved0 << 4) + bd->rx_ch;
 
-		if (bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1) {
+		/* FIXME: For some reason WCN3620 sometimes sends packets that
+		 * look like 5 GHz even though it is 2.4 GHz only...
+		 */
+		if (bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1 &&
+		    !DO_ONCE_LITE_IF(wcn->rf_id == RF_IRIS_WCN3620, wcn36xx_warn,
+				     "Received 5 GHz band packet on WCN3620? "
+				     "(rf_band %d, hwch %d)\n", bd->rf_band, hwch)) {
 			status.band = NL80211_BAND_5GHZ;
 			status.freq = ieee80211_channel_to_frequency(ab_rx_ch_map[hwch - 1],
 								     status.band);

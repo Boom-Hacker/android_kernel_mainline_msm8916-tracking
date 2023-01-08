@@ -37,8 +37,7 @@ static int bmc150_magn_i2c_probe(struct i2c_client *client,
 static int bmc150_magn_i2c_remove(struct i2c_client *client)
 {
 	bmc150_magn_remove(&client->dev);
-
-	return 0;
+    return 0;
 }
 
 static const struct acpi_device_id bmc150_magn_acpi_match[] = {
